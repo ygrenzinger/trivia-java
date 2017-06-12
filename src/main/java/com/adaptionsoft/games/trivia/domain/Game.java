@@ -8,13 +8,13 @@ import java.util.Random;
 import static com.adaptionsoft.games.trivia.domain.QuestionType.*;
 
 public class Game {
+    public static final int MAX_ALLOWED_POSITION = 11;
 
     private final MessageChannel messageChannel;
     private final Random random;
     private final QuestionsBag questionsBag;
     private final GamePlayers players = new GamePlayers();
-
-    private Optional<Player> winner = Optional.empty();
+    
     private Player currentPlayer;
 
     private boolean gettingOutOfPenaltyBox = false;
@@ -33,53 +33,57 @@ public class Game {
 
     public void run() {
         if (players.isEmpty()) return;
-        
+
+        Optional<Player> winner = playTurn();
         while (!winner.isPresent()) {
-            playTurn();
+            winner = playTurn();
         }
     }
 
-    private void playTurn() {
+    private Optional<Player> playTurn() {
         currentPlayer = players.next();
-        roll();
-        if (random.nextInt(9) == 7) {
+        movePlayer();
+        if (isCorrectQuestion()) {
             handleWrongAnswer();
         } else {
             handleCorrectAnswer();
-            checkIfWinner();
         }
+        return checkIfWinner();
     }
 
-    private void roll() {
-        int roll = random.nextInt(5) + 1;
+    private boolean isCorrectQuestion() {
+        return random.nextInt(9) == 7;
+    }
+
+    private void movePlayer() {
+        int roll = roll();
         String playerName = currentPlayer.getName();
         messageChannel.writeLine(playerName + " is the current player");
         messageChannel.writeLine("They have rolled a " + roll);
 
         if (currentPlayer.isInPenaltyBox()) {
             if (roll % 2 == 0) {
-                messageChannel.writeLine(playerName + " is not getting out of the penalty box");
                 gettingOutOfPenaltyBox = false;
+                messageChannel.writeLine(playerName + " is not getting out of the penalty box");
             } else {
                 gettingOutOfPenaltyBox = true;
                 messageChannel.writeLine(playerName + " is getting out of the penalty box");
-                movePlayer(roll);
             }
-        } else {
+        }
+
+        if (!currentPlayer.isInPenaltyBox() || gettingOutOfPenaltyBox) {
             movePlayer(roll);
         }
 
     }
 
-    private void movePlayer(int roll) {
-        int nextPlace = currentPlayer.getPlace() + roll;
-        if (nextPlace > 11) {
-            currentPlayer.setPlace(nextPlace - 12);
-        } else {
-            currentPlayer.setPlace(nextPlace);
-        }
+    private int roll() {
+        return random.nextInt(5) + 1;
+    }
 
-        messageChannel.writeLine(currentPlayer.getName() + "'s new location is " + currentPlayer.getPlace());
+    private void movePlayer(int roll) {
+        int nextPlace = currentPlayer.move(roll);
+        messageChannel.writeLine(currentPlayer.getName() + "'s new location is " + nextPlace);
         askQuestion();
     }
 
@@ -90,19 +94,21 @@ public class Game {
         messageChannel.writeLine(question);
     }
 
-
     private QuestionType currentCategory() {
-        int mod = currentPlayer.getPlace() % 4;
-        switch (mod) {
-            case 0: return POP;
-            case 1: return SCIENCE;
-            case 2: return SPORTS;
-            default: return ROCK;
+        switch (currentPlayer.getPlace() % 4) {
+            case 0:
+                return POP;
+            case 1:
+                return SCIENCE;
+            case 2:
+                return SPORTS;
+            default:
+                return ROCK;
         }
     }
 
     private void handleCorrectAnswer() {
-        if (!(currentPlayer.isInPenaltyBox() && !gettingOutOfPenaltyBox)) {
+        if (!currentPlayer.isInPenaltyBox() || gettingOutOfPenaltyBox) {
             messageChannel.writeLine("Answer was correct!!!!");
             currentPlayer.incPurse();
             messageChannel.writeLine(currentPlayer.getName() + " now has " + currentPlayer.getPurse() + " Gold Coins.");
@@ -115,10 +121,10 @@ public class Game {
         currentPlayer.goInPenaltyBox();
     }
 
-
-    private void checkIfWinner() {
+    private Optional<Player> checkIfWinner() {
         if (currentPlayer.isWinner()) {
-            winner = Optional.of(currentPlayer);
+            return Optional.of(currentPlayer);
         }
+        return Optional.empty();
     }
 }

@@ -39,12 +39,15 @@ public class Player {
         return purse == 6;
     }
 
-    public int getPlace() {
+    public int move(int roll) {
+        place = place + roll;
+        if (place > Game.MAX_ALLOWED_POSITION) {
+            place = place - (Game.MAX_ALLOWED_POSITION + 1);
+        }
         return place;
     }
 
-    public void setPlace(int place) {
-        this.place = place;
+    public int getPlace() {
+        return place;
     }
-
 }
