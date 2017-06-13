@@ -5,16 +5,14 @@ import com.adaptionsoft.games.trivia.MessageChannel;
 import java.util.Optional;
 import java.util.Random;
 
-import static com.adaptionsoft.games.trivia.domain.QuestionType.*;
-
 public class Game {
-    public static final int MAX_ALLOWED_POSITION = 11;
+    static final int MAX_ALLOWED_POSITION = 11;
 
     private final MessageChannel messageChannel;
     private final Random random;
     private final QuestionsBag questionsBag;
     private final GamePlayers players = new GamePlayers();
-    
+
     private Player currentPlayer;
 
     private boolean gettingOutOfPenaltyBox = false;
@@ -88,29 +86,15 @@ public class Game {
     }
 
     private void askQuestion() {
-        QuestionType questionType = currentCategory();
-        messageChannel.writeLine("The category is " + questionType);
-        String question = questionsBag.takeQuestion(questionType);
-        messageChannel.writeLine(question);
-    }
-
-    private QuestionType currentCategory() {
-        switch (currentPlayer.getPlace() % 4) {
-            case 0:
-                return POP;
-            case 1:
-                return SCIENCE;
-            case 2:
-                return SPORTS;
-            default:
-                return ROCK;
-        }
+        Question question = questionsBag.takeQuestion(currentPlayer.getPlace());
+        messageChannel.writeLine("The category is " + question.getQuestionType());
+        messageChannel.writeLine(question.getQuestion());
     }
 
     private void handleCorrectAnswer() {
         if (!currentPlayer.isInPenaltyBox() || gettingOutOfPenaltyBox) {
             messageChannel.writeLine("Answer was correct!!!!");
-            currentPlayer.incPurse();
+            currentPlayer.answerCorrectly();
             messageChannel.writeLine(currentPlayer.getName() + " now has " + currentPlayer.getPurse() + " Gold Coins.");
         }
     }

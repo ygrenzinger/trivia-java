@@ -3,14 +3,16 @@ package com.adaptionsoft.games.trivia.domain;
 import java.util.Deque;
 import java.util.LinkedList;
 
-public class QuestionsBag {
+import static com.adaptionsoft.games.trivia.domain.QuestionType.*;
+
+class QuestionsBag {
     private Deque<String> popQuestions = new LinkedList<>();
     private Deque<String> scienceQuestions = new LinkedList<>();
     private Deque<String> sportsQuestions = new LinkedList<>();
     private Deque<String> rockQuestions = new LinkedList<>();
 
 
-    public static QuestionsBag build() {
+    static QuestionsBag build() {
         QuestionsBag questionsBag = new QuestionsBag();
         for (int i = 0; i < 50; i++) {
             questionsBag.popQuestions.addLast("Pop Question " + i);
@@ -22,7 +24,26 @@ public class QuestionsBag {
     }
 
 
-    public String takeQuestion(QuestionType questionType) {
+    Question takeQuestion(int place) {
+        QuestionType questionType = category(place);
+        String question = retrieveQuestion(questionType);
+        return new Question(question, questionType);
+    }
+
+    private QuestionType category(int place) {
+        switch (place % 4) {
+            case 0:
+                return POP;
+            case 1:
+                return SCIENCE;
+            case 2:
+                return SPORTS;
+            default:
+                return ROCK;
+        }
+    }
+
+    private String retrieveQuestion(QuestionType questionType) {
         switch (questionType) {
             case POP:
                 return popQuestions.removeFirst();

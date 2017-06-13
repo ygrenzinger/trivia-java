@@ -1,9 +1,9 @@
 package com.adaptionsoft.games.trivia.domain;
 
-public class Player {
+class Player {
     private final String name;
-    private int purse = 0;
 
+    private int purse = 0;
     private int place = 0;
     private boolean inPenaltyBox = false;
 
@@ -11,35 +11,19 @@ public class Player {
         this.name = name;
     }
 
-    public static Player ofName(String name) {
+    static Player ofName(String name) {
         return new Player(name);
     }
 
-    public String getName() {
-         return name;
-    }
-
-    public void incPurse() {
+    void answerCorrectly() {
         purse++;
     }
 
-    public int getPurse() {
-        return purse;
-    }
-
-    public void goInPenaltyBox() {
+    void goInPenaltyBox() {
         inPenaltyBox = true;
     }
 
-    public boolean isInPenaltyBox() {
-        return inPenaltyBox;
-    }
-
-    public boolean isWinner() {
-        return purse == 6;
-    }
-
-    public int move(int roll) {
+    int move(int roll) {
         place = place + roll;
         if (place > Game.MAX_ALLOWED_POSITION) {
             place = place - (Game.MAX_ALLOWED_POSITION + 1);
@@ -47,7 +31,24 @@ public class Player {
         return place;
     }
 
-    public int getPlace() {
+    boolean isWinner() {
+        return purse == 6;
+    }
+
+    boolean isInPenaltyBox() {
+        return inPenaltyBox;
+    }
+
+    int getPlace() {
         return place;
     }
+
+    String getName() {
+        return name;
+    }
+
+    int getPurse() {
+        return purse;
+    }
+    
 }
