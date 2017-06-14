@@ -1,9 +1,13 @@
 package com.adaptionsoft.games.trivia.domain;
 
 import com.adaptionsoft.games.trivia.MessageChannel;
+import one.util.streamex.StreamEx;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 public class Game {
     static final int MAX_ALLOWED_POSITION = 11;
@@ -32,10 +36,11 @@ public class Game {
     public void run() {
         if (players.isEmpty()) return;
 
-        Optional<Player> winner = playTurn();
-        while (!winner.isPresent()) {
-            winner = playTurn();
-        }
+        Optional<Player> first = StreamEx.generate(this::playTurn)
+                .takeWhile(Optional::isPresent)
+                .flatMap(o -> o.map(Stream::of).orElseGet(Stream::empty))
+                .findFirst();
+        first.ifPresent(player -> System.out.println("The winner is " + player.getName()));
     }
 
     private Optional<Player> playTurn() {
